@@ -365,4 +365,4 @@ FodyWeavers.xsd
 CarRentalApp/appsettings.Development.json
 CarRentalApp/wwwroot/uploads
 # ignoring appsettings.json for security reasons
-CarRentalApp.appsettings.json
+CarRentalApp/appsettings.json
