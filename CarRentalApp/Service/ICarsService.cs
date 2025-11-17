@@ -6,5 +6,6 @@ namespace CarRentalApp.Service
     {
         // Define method signatures for car-related operations
         Task<List<CarDTO>> GetAllCarsAsync();
+        Task<CarDTO> GetCarByIdAsync(int carId);
     }
 }

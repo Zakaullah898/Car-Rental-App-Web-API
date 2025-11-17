@@ -21,5 +21,20 @@ namespace CarRentalApp.Service
             return _mapper.Map<List<CarDTO>>(cars);
 
         }
+
+        public async Task<CarDTO> GetCarByIdAsync(int carId)
+        {
+            if(carId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(carId), "CarId must be greater than zero.");
+            }
+            var car = await _carRepository.GetAsync(c => c.CarId == carId, false);
+            if(car == null)
+            {
+                throw new KeyNotFoundException($"Car with ID {carId} not found.");
+            }
+            CarDTO carDTO = _mapper.Map<CarDTO>(car);
+            return carDTO;
+        }
     }
 }

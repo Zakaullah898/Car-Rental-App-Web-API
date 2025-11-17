@@ -41,5 +41,43 @@ namespace CarRentalApp.Controllers
                 return Ok(_response);
             }
         }
+        // api/cars/GetById/Id
+        [HttpGet("GetById/{id:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<ApiResponse>> GetCarById(int id)
+        {
+            try
+            {
+                var car = await _carsService.GetCarByIdAsync(id);
+                _response.Data = car;
+                _response.status = true;
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                _response.Errors!.Add(ex.Message);
+                _response.StatusCode = HttpStatusCode.BadRequest;
+                _response.status = false;
+                return Ok(_response);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _response.Errors!.Add(ex.Message);
+                _response.StatusCode = HttpStatusCode.NotFound;
+                _response.status = false;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.Errors!.Add(ex.Message);
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.status = false;
+                return Ok(_response);
+            }
+        }
     }
 }
