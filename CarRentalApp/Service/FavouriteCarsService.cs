@@ -61,6 +61,21 @@ namespace CarRentalApp.Service
             return favouriteCarsDTOs;
         }
 
-      
+        public async Task<FavouriteDTO> RemoveFromFavouritesAsync(string userId, int carId)
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new ArgumentNullException(nameof(userId), "UserId cannot be null or empty.");
+            }
+
+            if (carId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(carId), "CarId must be greater than zero.");
+            }
+            var removeFavouriteCar = await _FavouriteCarsRepository.DeleteAsync(fc => fc.UserId == userId &&  fc.CarId == carId);
+            var resultDto = _mapper.Map<FavouriteDTO>(removeFavouriteCar);
+            return resultDto;
+
+        }
     }
 }
