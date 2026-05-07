@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CarRentalApp.Migrations
 {
     [DbContext(typeof(CarRentalDBContext))]
-    [Migration("20251031183356_AddingMigrationWihUserProfile")]
-    partial class AddingMigrationWihUserProfile
+    [Migration("20251120160205_updatingPaymentTable")]
+    partial class updatingPaymentTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,27 +34,42 @@ namespace CarRentalApp.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BookingId"));
 
+                    b.Property<string>("Address")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("address");
+
                     b.Property<int>("CarId")
                         .HasColumnType("int")
                         .HasColumnName("car_id");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("city");
+
+                    b.Property<int>("DropoffLocationId")
+                        .HasColumnType("int")
+                        .HasColumnName("dropoff_location_id");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("return_date");
 
-                    b.Property<int>("LocationId")
-                        .HasColumnType("int")
-                        .HasColumnName("dropoff_location_id");
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)")
+                        .HasColumnName("phone_number");
 
-                    b.Property<int>("PickupLocationLocationId")
-                        .HasColumnType("int");
+                    b.Property<int>("PickupLocationId")
+                        .HasColumnType("int")
+                        .HasColumnName("pickup_location_id");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("pickup_date");
 
                     b.Property<int>("Status")
-                        .HasMaxLength(20)
                         .HasColumnType("int")
                         .HasColumnName("status");
 
@@ -64,16 +79,22 @@ namespace CarRentalApp.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("user_name");
 
                     b.HasKey("BookingId")
-                        .HasName("booking_id");
+                        .HasName("PK_Bookings");
 
                     b.HasIndex("CarId");
 
-                    b.HasIndex("LocationId");
+                    b.HasIndex("DropoffLocationId");
 
-                    b.HasIndex("PickupLocationLocationId");
+                    b.HasIndex("PickupLocationId");
 
                     b.HasIndex("UserId");
 
@@ -107,10 +128,6 @@ namespace CarRentalApp.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("imageUrl");
 
-                    b.Property<bool>("IsFavorite")
-                        .HasColumnType("bit")
-                        .HasColumnName("is_favorite");
-
                     b.Property<decimal>("PricePerDay")
                         .HasColumnType("decimal(10,2)")
                         .HasColumnName("price_per_day");
@@ -143,6 +160,40 @@ namespace CarRentalApp.Migrations
                         .HasName("PK_Cars");
 
                     b.ToTable("Cars", (string)null);
+                });
+
+            modelBuilder.Entity("CarRentalApp.Data.FavoriteCars", b =>
+                {
+                    b.Property<int>("FavoriteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("favorite_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FavoriteId"));
+
+                    b.Property<DateTime>("AddedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("added_at")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("CarId")
+                        .HasColumnType("int")
+                        .HasColumnName("car_id");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("FavoriteId")
+                        .HasName("PK_FavoriteId");
+
+                    b.HasIndex("CarId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("FavoriteCars", (string)null);
                 });
 
             modelBuilder.Entity("CarRentalApp.Data.Location", b =>
@@ -239,6 +290,16 @@ namespace CarRentalApp.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("payment_date");
 
+                    b.Property<string>("PaymentStatus")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("payment_status");
+
+                    b.Property<string>("TransactionId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("transaction_id");
+
                     b.HasKey("PaymentId")
                         .HasName("payment_id");
 
@@ -290,13 +351,13 @@ namespace CarRentalApp.Migrations
                         .HasColumnName("gender");
 
                     b.Property<string>("LicenseBackImage")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)")
                         .HasColumnName("license_back_image");
 
                     b.Property<string>("LicenseFrontImage")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)")
                         .HasColumnName("license_front_image");
 
                     b.Property<string>("Phone")
@@ -310,8 +371,8 @@ namespace CarRentalApp.Migrations
                         .HasColumnName("post_code");
 
                     b.Property<string>("ProfileImageUrl")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)")
                         .HasColumnName("profile_image_url");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -544,6 +605,9 @@ namespace CarRentalApp.Migrations
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
 
+                    b.Property<bool>("HasProfile")
+                        .HasColumnType("bit");
+
                     b.HasDiscriminator().HasValue("User");
                 });
 
@@ -554,33 +618,55 @@ namespace CarRentalApp.Migrations
                         .HasForeignKey("CarId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
-                        .HasConstraintName("FK_Bookings_Car_CarId");
+                        .HasConstraintName("FK_Bookings_Cars");
 
                     b.HasOne("CarRentalApp.Data.Location", "DropoffLocation")
                         .WithMany("DropOffBookings")
-                        .HasForeignKey("LocationId")
+                        .HasForeignKey("DropoffLocationId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
-                        .HasConstraintName("FK_Bookings_Location_DropoffLocationId");
+                        .HasConstraintName("FK_Bookings_DropoffLocation");
 
                     b.HasOne("CarRentalApp.Data.Location", "PickupLocation")
                         .WithMany("PickupBookings")
-                        .HasForeignKey("PickupLocationLocationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PickupLocationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired()
+                        .HasConstraintName("FK_Bookings_PickupLocation");
 
                     b.HasOne("CarRentalApp.Data.User", "User")
                         .WithMany("Bookings")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("FK_Bookings_Users_UserId");
+                        .HasConstraintName("FK_Bookings_Users");
 
                     b.Navigation("Car");
 
                     b.Navigation("DropoffLocation");
 
                     b.Navigation("PickupLocation");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CarRentalApp.Data.FavoriteCars", b =>
+                {
+                    b.HasOne("CarRentalApp.Data.Car", "Car")
+                        .WithMany("FavoriteCars")
+                        .HasForeignKey("CarId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_FavoriteCars_Cars_CarId");
+
+                    b.HasOne("CarRentalApp.Data.User", "User")
+                        .WithMany("FavoriteCars")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_FavoriteCars_Users_UserId");
+
+                    b.Navigation("Car");
 
                     b.Navigation("User");
                 });
@@ -602,7 +688,7 @@ namespace CarRentalApp.Migrations
                     b.HasOne("CarRentalApp.Data.Booking", "Booking")
                         .WithOne("Payment")
                         .HasForeignKey("CarRentalApp.Data.Payment", "BookingId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_Payments_Bookings_BookingId");
 
@@ -679,6 +765,8 @@ namespace CarRentalApp.Migrations
             modelBuilder.Entity("CarRentalApp.Data.Car", b =>
                 {
                     b.Navigation("Bookings");
+
+                    b.Navigation("FavoriteCars");
                 });
 
             modelBuilder.Entity("CarRentalApp.Data.Location", b =>
@@ -691,6 +779,8 @@ namespace CarRentalApp.Migrations
             modelBuilder.Entity("CarRentalApp.Data.User", b =>
                 {
                     b.Navigation("Bookings");
+
+                    b.Navigation("FavoriteCars");
 
                     b.Navigation("OTPVerifications");
 

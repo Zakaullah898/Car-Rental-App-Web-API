@@ -12,19 +12,19 @@ namespace CarRentalApp.Service
     {
         private readonly ICarRentalRepository<UserProfile> _userProfileRepository;
         private readonly UserManager<User> _userManager;
-        private readonly IFileStorageService _fileStorage;
         private readonly IMapper _mapper;    
+        private readonly ICloudinaryService _cloudinaryService;
         public UserProfileService(
             ICarRentalRepository<UserProfile> userProfileRepository,
             IMapper mapper,
             UserManager<User> userManager,
-            IFileStorageService fileStorage
+            ICloudinaryService cloudinaryService
             )
         {
             _userProfileRepository = userProfileRepository;
             _userManager = userManager;
             _mapper = mapper;
-            _fileStorage = fileStorage;
+            _cloudinaryService = cloudinaryService;
         }
         public async Task<UserProfileDTO> CreateUserProfileAsync(UserProfileCreateDTO Entity)
         {
@@ -47,9 +47,9 @@ namespace CarRentalApp.Service
             }
             // Save uploaded files via file storage service
             Console.WriteLine("Saving uploaded files...");
-            var profileImageUrl = await _fileStorage.SaveFileAsync(Entity.ProfileImage);
-            var licenseFrontImage = await _fileStorage.SaveFileAsync(Entity.LicenseFrontImage);
-            var licenseBackImage = await _fileStorage.SaveFileAsync(Entity.LicenseBackImage);
+            var profileImageUrl = await _cloudinaryService.UploadImageAsync(Entity.ProfileImage!);
+            var licenseFrontImage = await _cloudinaryService.UploadImageAsync(Entity.LicenseFrontImage!);
+            var licenseBackImage = await _cloudinaryService.UploadImageAsync(Entity.LicenseBackImage!);
             Console.WriteLine("Files saved successfully.");
             // Map DTO to entity
             var userProfile = _mapper.Map<UserProfile>(Entity);
@@ -107,11 +107,11 @@ namespace CarRentalApp.Service
             var licenseBackImage = existingProfileTask.LicenseBackImage;
 
             if (Entity.ProfileImage != null)
-                profileImageUrl = await _fileStorage.SaveFileAsync(Entity.ProfileImage);
+                profileImageUrl = await _cloudinaryService.UploadImageAsync(Entity.ProfileImage);
             if (Entity.LicenseFrontImage != null)
-                licenseFrontImage = await _fileStorage.SaveFileAsync(Entity.LicenseFrontImage);
+                licenseFrontImage = await _cloudinaryService.UploadImageAsync(Entity.LicenseFrontImage);
             if (Entity.LicenseBackImage != null)
-                licenseBackImage = await _fileStorage.SaveFileAsync(Entity.LicenseBackImage);
+                licenseBackImage = await _cloudinaryService.UploadImageAsync(Entity.LicenseBackImage);
 
             // Map DTO to entity
             var userProfile = _mapper.Map<UserProfile>(Entity);

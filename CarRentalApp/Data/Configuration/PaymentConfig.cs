@@ -16,12 +16,14 @@ namespace CarRentalApp.Data.Configuration
             builder.Property(p => p.Method).HasMaxLength(20)
                    .HasColumnName("payment_method")
                    .IsRequired();
+            builder.Property(p => p.PaymentStatus).HasMaxLength(20).HasColumnName("payment_status");
+            builder.Property(p => p.TransactionId).HasMaxLength(50).HasColumnName("transaction_id");
 
             // Foreign Key Relationship for Booking
             builder.HasOne(p => p.Booking)
                    .WithOne(b => b.Payment)
                    .HasForeignKey<Payment>(p => p.BookingId)
-                   .OnDelete(DeleteBehavior.NoAction)
+                   .OnDelete(DeleteBehavior.Cascade)
                    .HasConstraintName("FK_Payments_Bookings_BookingId");
         }
     }

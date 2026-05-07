@@ -2,6 +2,7 @@
 using CarRentalApp.Configuration;
 using CarRentalApp.Data;
 using CarRentalApp.Data.Repository;
+using CarRentalApp.models;
 using CarRentalApp.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -72,7 +73,7 @@ namespace CarRentalApp
 
             #endregion
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
+            //builder.Services.AddOpenApi();
 
             #region swaggaer Configuration
             builder.Services.AddSwaggerGen(options=>
@@ -112,13 +113,18 @@ namespace CarRentalApp
             #region Dependency Injection
             // Dependency Injection for repository
             builder.Services.AddScoped(typeof(ICarRentalRepository<>), typeof(CarRentalRepository<>));
-            builder.Services.AddScoped<IFileStorageService, FileStorageService>();
             // Dependency Injection for services
             builder.Services.AddScoped<IAuthUserService, AuthUserService>();
             builder.Services.AddScoped<ICarsService, CarsService>();
             builder.Services.AddScoped<IUserProfileService, UserProfileService>();
             builder.Services.AddScoped<IFavouriteCarsService, FavouriteCarsService>();
             builder.Services.AddScoped<IFavouriteRespository, FavouriteRespository>();
+            builder.Services.AddScoped<IBookingService, BookingService>();
+            builder.Services.AddScoped<ILocationService, LocationService>();
+            builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+            // Adding cloudinary configuration 
+            builder.Services.Configure<CloudinarySettings>(
+                builder.Configuration.GetSection("CloudinarySettings"));
             #endregion
 
             #region Adding cores policy for angular application
@@ -138,12 +144,13 @@ namespace CarRentalApp
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                app.MapOpenApi();
+                //app.MapOpenApi();
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
 
             app.UseHttpsRedirection();
+            //app.MapGet("/", () => "API is running");
             // ? CORS should come BEFORE Authentication/Authorization
 
             app.UseCors("AllowAngularApp");
