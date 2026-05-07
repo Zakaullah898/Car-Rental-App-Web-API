@@ -140,8 +140,9 @@ namespace CarRentalApp
             });
             #endregion
             var app = builder.Build();
-            app.UseStaticFiles();
+            //app.UseStaticFiles();
             // Configure the HTTP request pipeline.
+            app.UseHttpsRedirection();
             if (app.Environment.IsDevelopment())
             {
                 //app.MapOpenApi();
@@ -149,7 +150,6 @@ namespace CarRentalApp
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
             //app.MapGet("/", () => "API is running");
             // ? CORS should come BEFORE Authentication/Authorization
 
