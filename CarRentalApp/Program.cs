@@ -178,7 +178,7 @@ namespace CarRentalApp
 
 
                 app.MapControllers();
-
+                app.MapGet("/", () => "Car Rental API Running Successfully");
                 app.Run();
             }
             catch (Exception ex)
