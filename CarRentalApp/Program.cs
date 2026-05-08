@@ -1,4 +1,7 @@
-
+﻿
+using Azure.Extensions.AspNetCore.Configuration.Secrets;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using CarRentalApp.Configuration;
 using CarRentalApp.Data;
 using CarRentalApp.Data.Repository;
@@ -22,13 +25,23 @@ namespace CarRentalApp
             // Add services to the container.
 
             builder.Services.AddControllers();
+
+            #region 🔐 KEY VAULT FIRST (VERY IMPORTANT)
+
+            builder.Configuration.AddAzureKeyVault(
+                new Uri("https://carrentalappkeyvalut.vault.azure.net/"),
+                new DefaultAzureCredential()
+            );
+            #endregion
+
             #region Configure Entity Framework
             // Configure Entity Framework and SQL Server
             builder.Services.AddDbContext<CarRentalDBContext>(options =>
             options.UseSqlServer(
-                builder.Configuration.GetConnectionString("CarRentalDb"))
-            );
+                builder.Configuration["ConnectionStrings:CarRentalDb"]
+            ));
             #endregion
+            Console.WriteLine($"Connection string:  {builder.Configuration["ConnectionStrings:CarRentalDb"]}");
 
             #region Configuration for Identity Server and Authentication
             // Configuration for Identity Server and Authentication can be added here
@@ -127,6 +140,7 @@ namespace CarRentalApp
                 builder.Configuration.GetSection("CloudinarySettings"));
             #endregion
 
+           
             #region Adding cores policy for angular application
             builder.Services.AddCors(options =>
             {

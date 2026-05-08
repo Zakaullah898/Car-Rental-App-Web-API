@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CarRentalApp.Data
 {
-    public class CarRentalDBContext : IdentityDbContext
+    public class CarRentalDBContext : IdentityDbContext<User>
     {
         public CarRentalDBContext()
         { }
