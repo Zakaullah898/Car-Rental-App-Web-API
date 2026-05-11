@@ -150,6 +150,7 @@ namespace CarRentalApp
                         builder =>
                         {
                             builder.WithOrigins("http://localhost:4209")
+                            .WithOrigins("https://victorious-cliff-037e9fc00.7.azurestaticapps.net/")
                                    .AllowAnyHeader()
                                    .AllowAnyMethod();
                         });
