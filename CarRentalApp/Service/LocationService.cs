@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
-using CarRentalApp.Data;
 using CarRentalApp.Data.Repository;
+using CarRentalApp.DTOs;
+using CarRentalApp.Interfaces;
 using CarRentalApp.models;
 
 namespace CarRentalApp.Service

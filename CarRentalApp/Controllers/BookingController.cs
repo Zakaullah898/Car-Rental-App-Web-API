@@ -1,6 +1,6 @@
 ﻿using CarRentalApp.CustomException;
+using CarRentalApp.Interfaces;
 using CarRentalApp.models;
-using CarRentalApp.Service;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SendGrid.Helpers.Errors.Model;

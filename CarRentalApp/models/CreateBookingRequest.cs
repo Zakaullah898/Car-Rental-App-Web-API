@@ -1,4 +1,5 @@
-﻿using static CarRentalApp.models.Enums;
+﻿using CarRentalApp.DTOs;
+using static CarRentalApp.models.Enums;
 
 namespace CarRentalApp.models
 {

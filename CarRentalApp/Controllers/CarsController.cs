@@ -1,5 +1,5 @@
-﻿using CarRentalApp.models;
-using CarRentalApp.Service;
+﻿using CarRentalApp.Interfaces;
+using CarRentalApp.models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

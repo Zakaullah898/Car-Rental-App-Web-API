@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using CarRentalApp.models;
+using System.Linq.Expressions;
 
 namespace CarRentalApp.Data.Repository
 {

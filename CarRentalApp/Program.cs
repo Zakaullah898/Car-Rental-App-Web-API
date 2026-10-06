@@ -3,8 +3,8 @@ using Azure.Extensions.AspNetCore.Configuration.Secrets;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using CarRentalApp.Configuration;
-using CarRentalApp.Data;
 using CarRentalApp.Data.Repository;
+using CarRentalApp.Interfaces;
 using CarRentalApp.models;
 using CarRentalApp.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -29,11 +29,14 @@ namespace CarRentalApp
                 builder.Services.AddControllers();
 
                 #region 🔐 KEY VAULT FIRST (VERY IMPORTANT)
+                //if (builder.Environment.IsProduction())
+                //{
+                //    builder.Configuration.AddAzureKeyVault(
+                //        new Uri("https://carrentalappkeyvalut.vault.azure.net/"),
+                //        new DefaultAzureCredential()
+                //        );
+                //}
 
-                builder.Configuration.AddAzureKeyVault(
-                    new Uri("https://carrentalappkeyvalut.vault.azure.net/"),
-                    new DefaultAzureCredential()
-                );
                 #endregion
 
                 #region Configure Entity Framework
@@ -150,8 +153,8 @@ namespace CarRentalApp
                         builder =>
                         {
                             builder.WithOrigins(
-                                "http://localhost:4209",
-                                "https://victorious-cliff-037e9fc00.7.azurestaticapps.net"
+                                "http://localhost:4200"
+                                //"https://victorious-cliff-037e9fc00.7.azurestaticapps.net"
                                 )
                                    .AllowAnyHeader()
                                    .AllowAnyMethod();

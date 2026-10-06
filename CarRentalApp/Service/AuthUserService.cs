@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using CarRentalApp.CustomException;
-using CarRentalApp.Data;
+using CarRentalApp.Data.Repository;
+using CarRentalApp.DTOs;
+using CarRentalApp.Interfaces;
 using CarRentalApp.models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +12,7 @@ using SendGrid.Helpers.Errors.Model;
 using SendGrid.Helpers.Mail;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 
@@ -20,6 +23,7 @@ namespace CarRentalApp.Service
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly CarRentalDBContext _dbContext;
+        private readonly ICarRentalRepository<UserRefreshToken> _userRefreshToken;
         private readonly string _jwtIssuer;
         private readonly string _jwtAudience;
         private readonly IMapper _mapper;
@@ -29,7 +33,8 @@ namespace CarRentalApp.Service
             SignInManager<User> signInManager, 
             IConfiguration configuration, 
             CarRentalDBContext dbContext,
-            IMapper mapper)
+            IMapper mapper,
+            ICarRentalRepository<UserRefreshToken> userRefreshToken)
         {
             this._userManager = userManager;
             this._signInManager = signInManager;
@@ -39,36 +44,38 @@ namespace CarRentalApp.Service
             _jwtAudience = _configuration.GetValue<string>("LocalAudience")!;
             _dbContext = dbContext;
             _mapper = mapper;
+            _userRefreshToken = userRefreshToken;
         }
-        // Generating JWT token
-        public dynamic? GenerateJwtToken(string user)
-        {
-            var Key = Encoding.ASCII.GetBytes(_configuration.GetValue<string>("LocalScretKey")!);
-            var TokenHandler = new JwtSecurityTokenHandler();
-            var ExpiresIn = DateTime.UtcNow.AddHours(1);
-
-            var TokenDescriptor = new SecurityTokenDescriptor()
-            {
-                Issuer = _jwtIssuer,
-                Audience = _jwtAudience,
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Name, user),
-                    new Claim(ClaimTypes.Role,"user")
-                }),
-                Expires = ExpiresIn,
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Key), SecurityAlgorithms.HmacSha512)
-            };
-            var token = TokenHandler.CreateToken(TokenDescriptor);
-            return new
-            {
-                token = TokenHandler.WriteToken(token),
-                tokenType = "Bearer",
-                expiresIn = (int)(ExpiresIn - DateTime.UtcNow).TotalMinutes  // ✅ real seconds
-            };
 
 
-        }
+        //public dynamic? GenerateJwtToken(string user)
+        //{
+        //    var Key = Encoding.ASCII.GetBytes(_configuration.GetValue<string>("LocalScretKey")!);
+        //    var TokenHandler = new JwtSecurityTokenHandler();
+        //    var ExpiresIn = DateTime.UtcNow.AddHours(1);
+
+        //    var TokenDescriptor = new SecurityTokenDescriptor()
+        //    {
+        //        Issuer = _jwtIssuer,
+        //        Audience = _jwtAudience,
+        //        Subject = new ClaimsIdentity(new Claim[]
+        //        {
+        //            new Claim(ClaimTypes.Name, user),
+        //            new Claim(ClaimTypes.Role,"user")
+        //        }),
+        //        Expires = ExpiresIn,
+        //        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Key), SecurityAlgorithms.HmacSha512)
+        //    };
+        //    var token = TokenHandler.CreateToken(TokenDescriptor);
+        //    return new
+        //    {
+        //        token = TokenHandler.WriteToken(token),
+        //        tokenType = "Bearer",
+        //        expiresIn = (int)(ExpiresIn - DateTime.UtcNow).TotalMinutes  // ✅ real seconds
+        //    };
+
+
+        //}
 
         // for Login
         public async Task<LoginResponse> Login(LoginModel model)
@@ -245,6 +252,132 @@ namespace CarRentalApp.Service
             
 
             return true;
+        }
+
+
+
+
+        // Generating JWT token
+
+        public async Task<JwtTokenResponseDto> GenerateJwtToken(string userName, string userId)
+        {
+
+            var accessToken = GenerateJwtAccessToken(userName, userId);
+
+
+            var refreshToken = GenerateRefreshToken();
+
+            // Save Refresh Token in DB
+            var refreshTokenEntity = new UserRefreshToken
+            {
+
+                UserId = userId,
+
+                UserName = userName,
+
+                RefreshToken = refreshToken,
+
+                ExpiryDate = DateTime.UtcNow.AddDays(7),
+
+                IsRevoked = false
+            };
+
+            await _userRefreshToken.CreateAsync(refreshTokenEntity);
+
+            return new JwtTokenResponseDto
+            {
+                AccessToken = accessToken.Token,
+
+                RefreshToken = refreshToken,
+
+                AccessTokenExpiry = accessToken.Expiry,
+            };
+        }
+
+        public async Task<JwtTokenResponseDto> RefreshAccessTokenAsync(string refreshToken)
+        {
+
+            var refreshTokenEntity = await _userRefreshToken.GetAsync(rt => rt.RefreshToken == refreshToken);
+
+            if (refreshTokenEntity == null ||
+                refreshTokenEntity.IsRevoked ||
+                refreshTokenEntity.ExpiryDate <= DateTime.UtcNow)
+            {
+                throw new UnauthorizedException(
+                    "Invalid or expired refresh token."
+                );
+            }
+
+            // Revoke old refresh token
+            refreshTokenEntity.IsRevoked = true;
+
+            await _userRefreshToken.UpdateAsync(refreshTokenEntity);
+
+            // Generate new access token
+            var accessTokenResult = GenerateJwtAccessToken(refreshTokenEntity.UserName,refreshTokenEntity.UserId);
+
+            // Generate new refresh token
+            var newRefreshToken = GenerateRefreshToken();
+
+            var newRefreshTokenEntity = new UserRefreshToken
+            {
+                UserId = refreshTokenEntity.UserId,
+                UserName = refreshTokenEntity.UserName,
+                RefreshToken = newRefreshToken,
+                ExpiryDate = DateTime.UtcNow.AddMinutes(1),
+                IsRevoked = false
+            };
+
+            await _userRefreshToken.CreateAsync(newRefreshTokenEntity);
+
+            return new JwtTokenResponseDto
+            {
+                AccessToken = accessTokenResult.Token,
+                RefreshToken = newRefreshToken,
+                AccessTokenExpiry = accessTokenResult.Expiry
+            };
+        }
+        // Generating JWT Access token 
+        private (string Token, DateTime Expiry) GenerateJwtAccessToken(string userName,string userId)
+        {
+            var key = Encoding.UTF8.GetBytes(
+                _configuration["LocalScretKey"]!
+            );
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            var accessTokenExpiry = DateTime.UtcNow.AddMinutes(2);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Name, userName),
+                new Claim(ClaimTypes.Role, "user")
+            };
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = accessTokenExpiry,
+                Issuer = _jwtIssuer,
+                Audience = _jwtAudience,
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha512
+                )
+            };
+
+            var securityToken = tokenHandler.CreateToken(tokenDescriptor);
+
+            var accessToken = tokenHandler.WriteToken(securityToken);
+
+            return (accessToken, accessTokenExpiry);
+        }
+
+        // Refreshing JWT token generating new token
+        private string GenerateRefreshToken()
+        {
+            return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
         }
     }
 }

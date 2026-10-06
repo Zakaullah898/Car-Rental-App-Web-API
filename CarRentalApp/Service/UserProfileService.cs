@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
 using CarRentalApp.CustomException;
-using CarRentalApp.Data;
 using CarRentalApp.Data.Repository;
+using CarRentalApp.DTOs;
+using CarRentalApp.Interfaces;
 using CarRentalApp.models;
 using Microsoft.AspNetCore.Identity;
 using SendGrid.Helpers.Errors.Model;

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CarRentalApp.models;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace CarRentalApp.Data.Repository

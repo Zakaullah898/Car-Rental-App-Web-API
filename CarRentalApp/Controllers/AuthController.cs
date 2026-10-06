@@ -1,7 +1,8 @@
 ﻿using CarRentalApp.CustomException;
 using CarRentalApp.Data;
+using CarRentalApp.DTOs;
+using CarRentalApp.Interfaces;
 using CarRentalApp.models;
-using CarRentalApp.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +19,7 @@ namespace CarRentalApp.Controllers
         private ApiResponse _response;
         private readonly IAuthUserService _authService;
         private readonly IUserProfileService _userProfileService;
-        public AuthController( IAuthUserService authUser, IUserProfileService userProfileService)
+        public AuthController(IAuthUserService authUser, IUserProfileService userProfileService)
         {
             _response = new ApiResponse();
             _authService = authUser;
@@ -92,7 +93,7 @@ namespace CarRentalApp.Controllers
             try
             {
 
-                
+
                 var result = await _authService.Login(model);
                 if (!result.IsSuccess)
                 {
@@ -104,7 +105,7 @@ namespace CarRentalApp.Controllers
                 }
                 else
                 {
-                    var tokenData = _authService.GenerateJwtToken(model.Email);
+                    var tokenData = await _authService.GenerateJwtToken(model.Email, result.UserId!);
                     if (!result.HasProfile)
                     {
                         _response.Data = new
@@ -189,7 +190,7 @@ namespace CarRentalApp.Controllers
 
                     _response.Data = new
                     {
-                        message ="You otp is valid"
+                        message = "You otp is valid"
                     };
                     _response.status = true;
                     _response.StatusCode = HttpStatusCode.OK;
@@ -343,6 +344,55 @@ namespace CarRentalApp.Controllers
             }
         }
 
-       
+        [HttpPost("refresh-token")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto request)
+        {
+
+
+
+            try
+            {
+                var result = await _authService.RefreshAccessTokenAsync(request.RefreshToken);
+
+                if (result == null)
+                {
+                    return Unauthorized("Invalid or expired refresh token.");
+                }
+                else
+                {
+                    _response.Message = "Token refreshed successfully.";
+                    _response.Data = new
+                    {
+                        AccessToken = result.AccessToken,
+                        RefreshToken = result.RefreshToken,
+                        ExpiresIn = result.AccessTokenExpiry
+                    };
+                    _response.status = true;
+                    _response.StatusCode = HttpStatusCode.OK;
+                    return Ok(_response);
+                }
+            }
+            catch (UnauthorizedException ex)
+            {
+                _response.Errors!.Add(ex.Message);
+                _response.StatusCode = HttpStatusCode.Unauthorized;
+                _response.status = false;
+
+                return Unauthorized(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.Errors!.Add(ex.Message);
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.status = false;
+                return Ok(_response);
+
+            }
+
+        }
     }
 }
